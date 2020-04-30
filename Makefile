@@ -85,6 +85,13 @@ endif
 ifeq ($(GOARCH),386)
 dist: DISTARCH := x32
 endif
+ifeq ($(GOARCH),arm)
+dist: DISTARCH := armv7hl
+endif
+ifeq ($(GOARCH),arm64)
+dist: DISTARCH := aarch64
+endif
+
 ifneq ($(VERSION_SUFFIX),)
 dist: VERSION := latest
 endif
@@ -104,57 +111,16 @@ dist: public
 	cp evebox.yaml.example dist/$(DISTNAME)
 	cd dist && zip -r ${DISTNAME}.zip ${DISTNAME}
 
-# Debian packaging. Due to a versioning screwup early on, we now need
-# to set the epoch to 1 for those updating with apt.
-deb: EPOCH := 1
-ifneq ($(VERSION_SUFFIX),)
-deb: TILDE := ~$(VERSION_SUFFIX)$(BUILD_DATE)
-deb: EVEBOX_BIN := dist/${APP}-latest-linux-x64/evebox
-deb: OUTPUT := dist/evebox-latest-amd64.deb
-else
-deb: EVEBOX_BIN := dist/${APP}-${VERSION}-linux-x64/evebox
-deb: OUTPUT := dist/
-endif
-deb: STAGE := dist/_stage-deb
-deb:
-	rm -rf $(STAGE)
-	mkdir -p $(STAGE)
-	install -m 0644 \
-		evebox.yaml.example \
-		agent.yaml.example \
-		deb/evebox.default \
-		deb/evebox.service \
-		deb/evebox-agent.service \
-		$(STAGE)
-	install -m 0755 $(EVEBOX_BIN) $(STAGE)
-	fpm --force -s dir \
-		-t deb \
-		-p $(OUTPUT) \
-		-n evebox \
-		--epoch $(EPOCH) \
-		-v $(VERSION)$(TILDE) \
-		--after-install=deb/after-install.sh \
-		--after-upgrade=deb/after-upgrade.sh \
-		--deb-no-default-config-files \
-		--config-files /etc/default/evebox \
-		$(STAGE)/evebox=/usr/bin/evebox \
-	        $(STAGE)/evebox.yaml.example=/etc/evebox/evebox.yaml.example \
-		$(STAGE)/agent.yaml.example=/etc/evebox/agent.yaml.example \
-		$(STAGE)/evebox.default=/etc/default/evebox \
-		$(STAGE)/evebox.service=/lib/systemd/system/evebox.service \
-		$(STAGE)/evebox-agent.service=/lib/systemd/system/evebox-agent.service
-	ar p dist/*.deb data.tar.gz | tar ztvf -
-
 # RPM packaging.
 ifneq ($(VERSION_SUFFIX),)
 # Setup non-release versioning.
 rpm: RPM_ITERATION := 0.$(VERSION_SUFFIX)$(BUILD_DATE)
-rpm: EVEBOX_BIN := dist/${APP}-latest-linux-x64/evebox
-rpm: OUTPUT := dist/evebox-latest-x86_64.rpm
+rpm: EVEBOX_BIN := dist/${APP}-latest-linux-armv7hl/evebox
+rpm: OUTPUT := dist/evebox-latest-armv7hl.rpm
 else
 # Setup release versioning.
 rpm: RPM_ITERATION := 1
-rpm: EVEBOX_BIN := dist/${APP}-${VERSION}-linux-x64/evebox
+rpm: EVEBOX_BIN := dist/${APP}-${VERSION}-linux-armv7hl/evebox
 rpm: OUTPUT := dist/
 endif
 rpm:
@@ -163,6 +129,7 @@ rpm:
 	    -p $(OUTPUT) \
 	    -n evebox \
 	    -v $(VERSION) \
+            --rpm-dist ns7 \
 	    --iteration $(RPM_ITERATION) \
 	    --before-install=rpm/before-install.sh \
 	    --after-upgrade=rpm/after-upgrade.sh \
