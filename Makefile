@@ -115,12 +115,12 @@ dist: public
 ifneq ($(VERSION_SUFFIX),)
 # Setup non-release versioning.
 rpm: RPM_ITERATION := 0.$(VERSION_SUFFIX)$(BUILD_DATE)
-rpm: EVEBOX_BIN := dist/${APP}-latest-linux-armv7hl/evebox
-rpm: OUTPUT := dist/evebox-latest-armv7hl.rpm
+rpm: EVEBOX_BIN := dist/${APP}-latest-linux-aarch64/evebox
+rpm: OUTPUT := dist/evebox-latest-aarch64.rpm
 else
 # Setup release versioning.
 rpm: RPM_ITERATION := 1
-rpm: EVEBOX_BIN := dist/${APP}-${VERSION}-linux-armv7hl/evebox
+rpm: EVEBOX_BIN := dist/${APP}-${VERSION}-linux-aarch64/evebox
 rpm: OUTPUT := dist/
 endif
 rpm:
